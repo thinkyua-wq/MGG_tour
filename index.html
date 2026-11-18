@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>MegaGen 투어 카드</title>
 <style>
-  :root { --c:#0E7C86; --c2:#E6F4F5; --s:1; }
+  :root { --c:#04545B; --c2:#DDEEEF; --s:1; }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { height:100%; }
   body {
@@ -221,7 +221,7 @@ const store = {
 const side = document.getElementById('side'), main = document.getElementById('main');
 let cur = Math.min(+store.get('cur',0) || 0, FLAT.length-1);
 
-let openG; try{ openG = JSON.parse(store.get('openG','null')); }catch(e){ openG = null; }
+const openG = [];  /* 처음에는 모든 그룹 닫힘 */
 side.innerHTML = GROUPS.map((g,gi) =>
   '<div class="gbox'+(openG && !openG.includes(gi) ? ' closed':'')+'" data-g="'+gi+'">' +
   '<div class="grp"><span>'+g.name+'</span><span class="cnt">'+g.cards.length+'</span><span class="arr">▼</span></div>' +
@@ -232,6 +232,7 @@ function saveOpen(){
   store.set('openG', JSON.stringify(o));
 }
 
+let first = true;
 function show(i){
   cur = Math.max(0, Math.min(FLAT.length-1, i));
   const c = FLAT[cur];
@@ -244,9 +245,10 @@ function show(i){
   main.scrollTop = 0;
   document.querySelectorAll('.item').forEach(el => el.classList.toggle('on', el.dataset.id === c.id));
   const on = side.querySelector('.item.on');
-  if (on) { const gb=on.closest('.gbox'); if (gb.classList.contains('closed')) { gb.classList.remove('closed'); saveOpen(); } on.scrollIntoView({block:'nearest'}); }
+  if (on) { const gb=on.closest('.gbox'); if (!first && gb.classList.contains('closed')) { gb.classList.remove('closed'); saveOpen(); } on.scrollIntoView({block:'nearest'}); }
   document.getElementById('pos').textContent = (cur+1)+' / '+FLAT.length;
   store.set('cur', cur);
+  first = false;
 }
 
 /* ---------- 이벤트 ---------- */
