@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>MegaGen 투어 카드</title>
+<style>
+  :root { --c:#0E7C86; --c2:#E6F4F5; --s:1; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; }
+  body {
+    background:#fff; color:#111;
+    font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    display:flex; flex-direction:column; height:100dvh; overflow:hidden;
+  }
+  .zhf { font-family:"Microsoft YaHei","微软雅黑","PingFang SC","Noto Sans SC","Noto Sans CJK SC",sans-serif; }
+
+  /* 상단바 */
+  .top { flex:none; height:48px; display:flex; align-items:center; gap:8px; padding:0 10px; border-bottom:1px solid #E3E7EC; }
+  .btn { border:0; background:#F2F4F7; color:#333; font-weight:800; font-size:15px; height:34px; min-width:34px; padding:0 9px; border-radius:8px; cursor:pointer; font-family:inherit; }
+  .btn:active { background:#DDE3EA; }
+  .brand { font-weight:900; font-size:15px; color:var(--c); white-space:nowrap; }
+  .sp { flex:1; }
+
+  /* 본문 레이아웃 */
+  .wrap { flex:1; display:flex; min-height:0; position:relative; }
+  .side { flex:none; width:270px; border-right:1px solid #E3E7EC; overflow-y:auto; background:#FAFBFC; transition:margin .2s; }
+  body.hide .side { margin-left:-270px; }
+  .grp { display:flex; align-items:center; gap:6px; padding:11px 12px; font-size:14.5px; font-weight:900; color:var(--c); position:sticky; top:0; background:#FAFBFC; cursor:pointer; border-bottom:1px solid #E3E7EC; user-select:none; }
+  .grp .cnt { color:#999; font-size:12px; font-weight:700; }
+  .grp .arr { margin-left:auto; font-size:12px; color:#888; transition:transform .2s; }
+  .gbox.closed .arr { transform:rotate(-90deg); }
+  .gbox.closed .list { display:none; }
+  .item { display:flex; gap:8px; padding:9px 12px; font-size:14.5px; font-weight:700; color:#333; cursor:pointer; border-left:4px solid transparent; line-height:1.35; white-space:nowrap; }
+  .item b { flex:none; color:#888; font-size:13px; min-width:30px; }
+  .item span { overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .item:hover { background:#EEF2F5; }
+  .item.on { background:var(--c2); border-left-color:var(--c); color:#000; }
+  .item.on b { color:var(--c); }
+  .dim { display:none; }
+
+  .main { flex:1; overflow-y:auto; padding:10px 14px 14px; min-width:0; }
+
+  /* 카드 */
+  .card { max-width:900px; margin:0 auto; }
+  .head { display:flex; align-items:center; gap:10px; padding-bottom:8px; border-bottom:3px solid var(--c); }
+  .no { background:var(--c); color:#fff; font-weight:900; font-size:18px; padding:3px 10px; border-radius:7px; }
+  .title { font-size:22px; font-weight:900; }
+  .zone { margin-left:auto; font-size:13px; font-weight:700; color:var(--c); white-space:nowrap; }
+  .sec { padding:10px 0; display:flex; gap:10px; align-items:flex-start; }
+  .sec + .sec { border-top:1px dashed #D5DAE1; }
+  .lang { flex:none; font-size:12px; font-weight:800; color:var(--c); background:var(--c2); padding:3px 7px; border-radius:6px; margin-top:6px; }
+  .ko p { font-size:calc(23px*var(--s)); font-weight:800; line-height:1.5; word-break:keep-all; }
+  .zh p { font-size:calc(25px*var(--s)); font-weight:800; line-height:1.95; }
+  .ko p+p, .zh p+p { margin-top:8px; }
+  .hl { color:var(--c); }
+  .em { background:linear-gradient(transparent 62%,#FFE58A 62%); }
+  ruby rt { font-size:12px; font-weight:700; color:#D9480F; font-family:Arial,sans-serif; }
+
+  /* 하단 이동 */
+  .bot { flex:none; height:52px; display:flex; align-items:center; gap:8px; padding:0 10px; border-top:1px solid #E3E7EC; }
+  .nav { flex:1; height:40px; font-size:16px; }
+  .pos { font-size:14px; font-weight:800; color:#666; min-width:60px; text-align:center; }
+
+  @media (max-width:760px) {
+    .side { position:absolute; z-index:5; top:0; bottom:0; left:0; box-shadow:4px 0 16px rgba(0,0,0,.15); }
+    body:not(.hide) .dim { display:block; position:absolute; inset:0; background:rgba(0,0,0,.25); z-index:4; }
+  }
+  @media (max-width:520px) {
+    .zone, .brand { display:none; }
+    .title { font-size:19px; }
+    .ko p { font-size:calc(19px*var(--s)); }
+    .zh p { font-size:calc(21px*var(--s)); }
+  }
+</style>
+</head>
+<body>
+<div class="top">
+  <button class="btn" id="menuBtn" title="메뉴 숨김/보기">☰</button>
+  <span class="brand">MegaGen 투어 카드</span>
+  <span class="sp"></span>
+  <button class="btn" id="fsDown" title="글자 작게">A−</button>
+  <button class="btn" id="fsUp" title="글자 크게">A+</button>
+</div>
+
+<div class="wrap">
+  <nav class="side" id="side"></nav>
+  <div class="dim" id="dim"></div>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="bot">
+  <button class="btn nav" id="prev">◀ 이전</button>
+  <span class="pos" id="pos"></span>
+  <button class="btn nav" id="next">다음 ▶</button>
+</div>
+
+<script>
+/* 표기 규칙: {한자|pinyin} = 병음, *텍스트* = 노란 강조, #텍스트# = 청록 숫자 강조 */
+const GROUPS = [
+{ name:"① 임플란트 공장", cards:[
+ { id:"F01", t:"로비 – 고객 선물 전시",
+   ko:["로비 오른쪽은 전 세계 메가젠 고객분들께서 보내주신 선물을 전시한 공간입니다. 중국과 아프리카 등 다양한 국가 고객분들의 선물과 메시지를 보실 수 있습니다."],
+   zh:["大厅右手边是礼品展示区，陈列着来自中国、非洲等世界各地美格真客户赠送的礼物和留言。"] },
+ { id:"F02", t:"로비 – 제품 전시",
+   ko:["이곳에는 임플란트, 어버트먼트, 툴 키트, 골이식재, 티타늄 멤브레인 등 주요 제품이 전시되어 있습니다. 여기서 메가젠의 프리미엄 라인업인 *ARi BD BDC* 제품도 함께 볼수있습니다."],
+   zh:["这里展示了种植体、基台、工具盒、骨移植材料、钛膜等主要产品，这里还可以看到美格真的高端产品线——*ARi、BD 和 BDC*。"] },
+ { id:"F03", t:"CNC 정밀 가공 입구",
+   ko:["이제 CNC 정밀 가공 구역으로 들어가겠습니다. 안전을 위해 바닥의 *황색선 안쪽으로는 절대 들어가지 말아 주시고*, 일행과 동선이 분산되지 않도록 함께 이동 부탁드립니다. *공장 내부는 사진 및 영상 촬영이 불가*합니다."],
+   zh:["现在我们进入 CNC 精密加工区域。为了安全，*请不要进入黄色安全线以内*，请跟随团队一起移动，避免走散。*工厂内部禁止拍照和录像*。"] },
+ { id:"F04", t:"CNC 정밀 가공실",
+   ko:["이곳은 임플란트의 기본 형상을 만드는 CNC 정밀 가공실입니다. 총 #116대#의 CNC 장비가 #24시간# 풀가동되며, 하루 픽스처 기준 약 #3만 개#를 생산합니다. CNC 장비는 *일본 노무라(NOMURA)* 제품을 사용하고 있습니다. 사용되는 *티타늄 원자재는 미국산*으로, 이는 *유럽의 주요 임플란트 브랜드들도 사용하는 최고등급 티타늄*입니다."],
+   zh:["这里是制造种植体基本形状的 CNC 精密加工车间。共有#116台#CNC设备#24小时#满{运行|yùnxíng}，以种植体为标准，每天可生产约#3万颗#。我们使用的CNC设备是*日本的{野村|Yěcūn}（NOMURA）品牌*，我们的植体采用*美国进口的{钛原材料|tài yuán cáiliào}*。很多*欧洲高端植体品牌，也使用同{等级|děngjí}的钛材料*。"] },
+ { id:"F05", t:"자동화 로봇 시스템",
+   ko:["이곳은 자동화 로봇 시스템이 운영되는 구역입니다. 자동 물류 시스템과 로봇 기술을 활용해 생산 효율과 안전성을 높이고, 반복 공정의 오차를 줄입니다."],
+   zh:["这里是自动化机器人系统区域。通过自动物流系统和机器人技术，提高生产效率与安全性，还有减少{重复工序|chóngfù gōngxù}中的误差。"] },
+ { id:"F06", t:"4단계 세척 공정",
+   ko:["CNC 가공 이후 임플란트는 #4단계# 세척 공정을 거칩니다. 특수 용액과 초음파 세척을 통해 절삭유와 미세 잔류물을 제거하고, 다음 표면 처리 공정을 준비합니다.",
+       "이 같은 철저한 관리가 바탕이 되어, 독일 *클린 임플란트 재단(Clean Implant Foundation)*으로부터 *‘클린 임플란트 인증(Trusted Quality Award)’을 #9년# 연속 수상*하였습니다. 임플란트 표면이 깨끗하다는 것은 단순히 보기 좋은 수준이 아니라, *체내 삽입 후 염증이나 부작용을 최소화하고, 뼈와의 결합을 더욱 안정적으로 만들어주는 핵심 요소*입니다."],
+   zh:["CNC加工完成后，种植体会经过#4道#清洗过程。通过特殊{溶液|róngyè}和超声波清洗，去除切削油和微小的残留物，为了后续表面处理做好准备。",
+       "正是因为这种严格的管理，美格真*连续#9年#获得德国{洁净|jiéjìng}植体基金会{授予|shòuyǔ}的“{洁净植体认证|jiéjìng zhítǐ rènzhèng}”*。说明我们的植体真的非常干净。植体表面干净，不只是“看起来干净”，而是能*减少{炎症|yánzhèng}，帮助骨结合，让手术更安全、更稳定*。"] },
+ { id:"F07", t:"XPEED 표면 처리",
+   ko:["일반적으로 임플란트는 방금 보신 산화 처리 공정을 거치면 표면이 회색으로 변하게 됩니다. 그런데 메가젠 임플란트는 왜 남색일까요? 그 이유는 메가젠의 핵심 기술인 *XPEED 표면 처리 공정* 때문입니다. XPEED는 단순한 코팅이 아니라, *티타늄 표면에 칼슘 이온을 직접 증착하는 기술*입니다. 이 공정에는 약 #8시간#이 추가로 소요되며, 초기 골유착에 유리한 표면 환경을 만들어 줍니다."],
+   zh:["一般来说，种植体经过刚才大家看到的氧化处理之后，表面会变成灰色。但是，为什么美格真的种植体是蓝色呢？原因就在于美格真的核心技术——*XPEED 表面处理工艺*。XPEED 并不是简单的涂层，而是*将钙离子直接{沉积|chénjī}在钛表面的技术*。这个工序需要额外约#8小时#，从而形成更有利于早期骨结合的表面环境。"] },
+ { id:"F08", t:"품질검사",
+   ko:["표면 처리 이후에는 제품별 품질검사를 진행합니다. 제품이 정해진 기준에 맞는지 확인해 출하 전 품질의 안정성과 일관성을 관리합니다."],
+   zh:["表面处理完成后，会进行产品品质检测，确认产品是否符合规定标准，为了确保在出货前稳定性和一致性。"] },
+ { id:"F09", t:"감마 멸균",
+   ko:["품질 검사를 마친 제품은 멸균 포장 후 외부 지정 기관에서 *감마 멸균*을 진행합니다. 이후 본사 품질관리팀이 최종 검수와 이력 관리를 진행합니다."],
+   zh:["产品完成品质检测后，会先进行灭菌包装，再由指定外部机构进行*{伽马射线灭菌|jiāmǎ shèxiàn mièjūn}*。之后由总部品质管理团队进行最终检验和{履历|lǚlì}管理。"] },
+ { id:"F10", t:"포장 및 출하",
+   ko:["이곳은 포장과 출하가 이루어지는 구역입니다. 최종 검수를 마친 제품은 친환경 포장으로 출고되며, 메가젠은 전 세계 *#100개국# 이상*에 제품을 공급하고 있습니다."],
+   zh:["这里是包装和出货区域。完成最终检验的产品会使用{环保|huánbǎo}包装出库，美格真目前向*全球#100#多个国家*供应产品。"] }
+]},
+{ name:"② 연구소", cards:[
+ { id:"R01", t:"연구소 4층 – 3D 설계",
+   ko:["이곳은 제품 개발의 시작점입니다. 새로운 임플란트와 보철 제품을 개발하기 전에 컴퓨터에서 3D 설계를 진행하며, 제품의 형태와 연결 구조, 두께와 강도를 검토합니다."],
+   zh:["这里是产品开发的起点。在开发新的种植体和修复体之前，我们会先进行{三维|sānwéi}设计，确认产品外形、连接结构、厚度和强度。"] },
+ { id:"R02", t:"컴퓨터 시뮬레이션",
+   ko:["3D 설계가 완료되면 컴퓨터 시뮬레이션을 진행합니다. 실제 사용 중 힘이 가해졌을 때 응력이 어느 부위에 집중되는지, 구조적 문제가 없는지를 미리 예측합니다."],
+   zh:["三维设计完成之后，会进行电脑{仿真|fǎngzhēn}。通过模拟实际受力情况，提前确认应力集中部位及产品结构是否存在问题。"] },
+ { id:"R03", t:"시제품 제작실 – CNC 가공",
+   ko:["시뮬레이션 검토 후에는 이 시제품 제작실에서 실제 제품을 만듭니다. 이곳에는 CNC 장비 #2대#가 있으며, 설계 데이터를 바탕으로 시제품을 직접 가공합니다."],
+   zh:["完成{仿真|fǎngzhēn}确认后，会在样品制作室制造实际样品。这里配备#两台#CNC设备，可根据设计数据直接加工样品。"] },
+ { id:"R04", t:"현미경 검사",
+   ko:["가공된 시제품은 현미경으로 확대 관찰합니다. 표면 상태와 미세한 가공 흔적, 결함 여부를 확인해 설계 의도대로 정밀하게 제작되었는지 검사합니다."],
+   zh:["加工完成的样品会通过显微镜放大观察。我们检查表面状态、微小加工痕迹和{缺陷|quēxiàn}，确认产品是否按设计要求精密制作。"] },
+ { id:"R05", t:"물성평가 – 압축강도 시험",
+   ko:["이 장비에서는 제품의 압축강도 시험을 진행합니다. 시제품을 고정한 뒤 위에서 아래 방향으로 하중을 점진적으로 가해, 변형이나 파손 전까지 견딜 수 있는 강도를 확인합니다."],
+   zh:["这里进行压缩强度测试。测试时先固定样品，再从上方{逐步|zhúbù}{施加|shījiā}压力，确认产品在变形或破损前能够承受多大的力量。"] },
+ { id:"R06", t:"물성평가 – 저작 피로시험",
+   ko:["이 시험은 실제 씹는 힘을 반복적으로 재현하는 저작 피로시험입니다. 일정한 힘을 반복적으로 가해 제품이 몇 회의 저작 하중까지 견디는지 확인합니다."],
+   zh:["这项测试是模拟实际{咀嚼|jǔjué}力量的{咀嚼疲劳测试|jǔjué píláo cèshì}。通过反复{施加|shījiā}一定力量，确认产品能够承受多少次{咀嚼负荷|jǔjué fùhè}。"] },
+ { id:"R07", t:"실물 시험과 시뮬레이션 비교",
+   ko:["마지막으로 실제 시험 결과를 컴퓨터 시뮬레이션 결과와 비교합니다. 개선이 필요한 부분이 발견되면 다시 설계 단계로 돌아가 제품을 보완합니다."],
+   zh:["最后，我们会将实际测试结果与电脑仿真结果进行比较。如发现需要改善的部分，就会回到设计阶段继续{优化|yōuhuà}。"] },
+ { id:"R08", t:"GBR 솔루션 – 골이식재 구성",
+   ko:["이곳은 GBR, 즉 골유도재생 솔루션을 소개하는 공간입니다. 메가젠은 *소뼈와 돼지 유래 이종골, 합성골, 콜라겐 소재*를 갖추고 있으며, 치료 목적에 맞춰 재료와 멤브레인을 선택합니다."],
+   zh:["这里介绍的是骨移植材料引导骨再生解决方案。美格真拥有*{牛源和猪源|niúyuán hé zhūyuán}异种骨、合成骨及{胶原|jiāoyuán}材料*，可根据治疗目的选择合适的材料与{膜片|mópiàn}。"] },
+ { id:"R09", t:"GBR – 흡수성 및 핸들링 데모",
+   ko:["이 데모는 골이식재가 액체를 얼마나 빠르게 흡수하고, 실제 시술 환경에서 어떻게 다뤄지는지를 보여줍니다. 혈액과 접촉하면 재료가 수분을 흡수하면서 응집력과 점성이 형성됩니다."],
+   zh:["这个演示展示骨移植材料的{吸液|xīyè}速度和操作表现。材料接触{血液|xuèyè}后会吸收液体，而且形成一定的{凝聚性和黏性|níngjùxìng hé niánxìng}。"] },
+ { id:"R10", t:"GBR – 골막(멤브레인)",
+   ko:["GBR 치료에는 골막, 즉 멤브레인도 함께 사용됩니다. 멤브레인은 이식 부위를 보호하고, 골 형성을 위한 공간이 유지되도록 돕는 역할을 합니다."],
+   zh:["骨移植材料治疗中还会使用骨膜，也就是膜片。膜片可以保护植骨区域，还有帮助维持骨再生所需要的空间。"] },
+ { id:"R11", t:"BIOLASE 워터레이즈",
+   ko:["다음은 메가젠 그룹의 *BIOLASE 워터레이즈*입니다. 워터레이즈는 물과 레이저 에너지를 활용하는 치과용 레이저 시스템으로, 연조직과 경조직 치료에 활용할 수 있습니다. 워터레이즈는 레이저가 치료 부위에 작용하며 절개와 응고를 함께 지원하는 방식입니다. 연조직과 경조직을 정밀하게 치료하고, 시술 중 출혈과 환자의 불편감을 줄이는 데 도움을 줄 수 있습니다.",
+       "BIOLASE 워터레이즈는 *중국 시장 진입을 위해 인허가 절차를 진행*하고 있습니다."],
+   zh:["接下来，我想介绍美格真集团的 *BIOLASE Waterlase 水激光*。水激光是一种结合水和激光能量的牙科激光系统，可用于软组织和硬组织治疗。治疗时，激光能量与水配合使用，可实现{切割|qiēgē}和{凝固|nínggù}。它可以用于软、硬组织的精准治疗，并有助于减少手术中的{出血|chūxuè}，降低患者的不便感。",
+       "目前，BIOLASE Waterlase *正在推进进入中国市场所需的注册许可流程*。"] },
+ { id:"R14", t:"세포 체외 시험실 – XPEED",
+   ko:["이곳은 XPEED 표면 처리 임플란트의 세포 반응을 평가하는 세포 체외 시험실입니다. 세포가 임플란트 표면에 얼마나 잘 부착하고, 넓게 퍼지며 성장하는지를 관찰합니다. XPEED는 일반적인 코팅이 아니라 *티타늄 표면에 칼슘 이온을 적용하는 표면 처리 기술*입니다. 단순히 덧씌운 막과 다른 방식으로, 초기 세포 반응과 골 형성에 유리한 표면 환경을 목표로 합니다.",
+       "세포가 잘 성장하려면, *암벽을 오를 때처럼 표면에 붙잡을 수 있는 지점이 많아야* 합니다."],
+   zh:["这里是评估 XPEED 表面处理种植体细胞反应的体外细胞实验室。我们会观察细胞在种植体表面的{附着|fùzhuó}、{扩展|kuòzhǎn}和生长情况。XPEED 不是普通的涂层，而是*一种在钛表面进行钙离子处理的表面技术*。它不是简单地覆盖一层材料，而是通过表面处理，形成更有利于早期细胞反应和骨形成的环境。",
+       "细胞要生长，首先需要能够稳定地{附着|fùzhuó}在表面，并{逐渐|zhújiàn}扩展。XPEED 的设计目标，就是为细胞早期附着和扩展提供更有利的表面环境，从而帮助骨组织与种植体更好地结合。",
+       "*就像{攀岩|pānyán}一样，表面上可以让细胞抓住的位置越多*，细胞就越容易附着和生长。"] }
+]},
+{ name:"③ 미르치과", cards:[
+ { id:"M01", t:"1층 휴식·대기 공간",
+   ko:["치과 1층은 환자와 보호자를 위한 휴식 및 대기 공간입니다. 구강 제품 판매 공간과 커피숍이 있어 치료 전후 편하게 쉬실 수 있으며, 발렛 주차 서비스도 제공합니다."],
+   zh:["一楼是为患者和家属准备的休息及等候空间。这里有口腔护理产品销售区和咖啡厅，也提供{代客泊车服务|dàikè bóchē fúwù}。"] },
+ { id:"M02", t:"박광범 원장님 대한민국 장인상",
+   ko:["이 상장은 박광범 원장님께서 받으신 *대한민국 장인상*입니다. 치과 분야에서 기술력과 전문성을 인정받아 선정되셨으며, 미르치과의 전문성을 상징하는 상입니다."],
+   zh:["这里展示的是朴光范院长获得的*韩国{名匠奖|míngjiàng jiǎng}*。这份{奖项|jiǎngxiàng}体现了朴院长在牙科领域获得的专业技术认可。"] },
+ { id:"M03", t:"참관 방식 및 주의사항",
+   ko:["미르치과는 층별로 진료 과목이 다르게 구성되어 있습니다. 먼저 10층으로 이동한 후 각 층을 둘러보며 1층까지 내려오겠습니다. *시설 촬영은 가능하지만 직원, 환자 및 치료 장면 촬영은 불가*합니다."],
+   zh:["MIR口腔每一层都设有不同的诊疗科室。我们会先前往9楼，再{逐层|zhúcéng}参观来到1楼。*设施可以拍照，但不能拍摄员工、患者或治疗过程*。"] },
+ { id:"M04", t:"미르치과 설립·네트워크·치과위생사",
+   ko:["대구 미르치과는 #2002년# 대구에서 #64대# 체어와 #12명#의 원장님으로 시작했습니다. 현재는 약 #1,500평# 규모, #81대# 체어와 #8개 층#의 진료 공간을 갖춘 대형 치과로 운영되고 있습니다. #9개# 진료 분과 협진, 디지털 기공센터지원하고 있으며, 치과의사 #24명#과 마취과 전문의, 치과위생사와 기공 전문 인력이 함께 진료합니다. 또한 미르치과는 전국 약 #16개# 지역에 네트워크를 운영하고 있습니다. 한국에서는 *치과위생사가 환자 관리와 진료 보조를 전문적으로 담당*하는 것도 하나의 특징입니다."],
+   zh:["大邱 MIR 口腔于#2002年#在大邱成立，最初拥有#64台#治疗{牙椅|yáyǐ}和#12位#院长。现在，门诊面积#1,500坪#，拥有#81台#{牙椅|yáyǐ}和#8个楼层#的诊疗空间。这里有#9个#专科协作系统和数字化技工中心。目前由#24名#牙科医生、麻醉科医生、牙科卫生师和技工专业人员共同提供诊疗服务。另外，MIR口腔目前在韩国约#16个#地区有网络。在韩国，*牙科卫生师会专业负责患者管理和协助牙科诊疗*，这也是韩国牙科系统的一个特点。"] },
+ { id:"M05", t:"7층 예진과·평생관리센터",
+   ko:["처음 방문한 환자는 이곳에서 우선 상담을 진행합니다. *#10년# 이상 경력의 치과위생사*가 구강 상태, 치료 이력, 생활 습관과 건강 상태를 확인한 뒤 적합한 진료과와 치료 계획을 안내합니다. 이 층에서는 정기 검진과 예방 진료도 함께 진행합니다. 총 #11대#의 체어와 별도 예방 진료 공간을 운영하며, 첫 방문부터 장기적인 구강 건강 관리까지 지원합니다."],
+   zh:["首次来院的患者会先在这里进行咨询。*拥有#10年#以上经验的牙科卫生师*会了解口腔状况、治疗经历、生活习惯和健康状况，再安排合适的专科和治疗方案。这一层也进行定期检查和预防治疗。这里配置#11台#{牙椅|yáyǐ}和专门的预防治疗区域，为患者提供从初诊到长期口腔健康管理的服务。"] },
+ { id:"M06", t:"3층 소아치과·수면센터",
+   ko:["이곳은 소아치과와 수면센터입니다. 치과 치료에 대한 공포가 있거나 협조가 어려운 소아 환자를 위해 수면치료를 운영하며, 환자 상태에 따라 *전신마취, 수면마취 또는 국소마취*를 적용합니다."],
+   zh:["这里是儿童牙科和睡眠治疗中心。针对对牙科治疗感到{恐惧|kǒngjù}或难以配合的儿童，可根据患者情况采用*全身麻醉、{镇静|zhènjìng}治疗或局部麻醉*。"] },
+ { id:"M07", t:"집진 시스템",
+   ko:["이 장비는 보철 치료 중 발생하는 미세 분진을 제거하는 집진 시스템입니다. 크라운이나 보철물을 조정할 때 발생하는 분진을 즉시 흡입해 쾌적한 진료 환경을 유지합니다."],
+   zh:["这是牙科{集尘|jíchén}系统。调整牙冠或义齿时产生的{粉尘|fěnchén}，会马上被吸走，让治疗环境更干净、更舒服。"] },
+ { id:"M08", t:"6층 교정과·구강 기능 진료",
+   ko:["이 층에서는 교정 진료와 함께 구강내과 전문의가 진료에 참여합니다. *턱관절 문제, 코골이, 이갈이* 등 구강 기능과 관련된 문제도 함께 진단하고 치료할 수 있습니다."],
+   zh:["这一层除了进行正畸治疗外，也有口腔内科医生共同参与诊疗。对于*{颞下颌关节|nièxiàhé guānjié}问题、{打鼾|dǎhān}和磨牙*等口腔功能问题，也可以进行诊断和治疗。"] }
+]}
+];
+
+/* ---------- 렌더링 ---------- */
+const FLAT = [];
+GROUPS.forEach(g => g.cards.forEach(c => FLAT.push(Object.assign({zone:g.name}, c))));
+
+function fmt(s){
+  return s
+    .replace(/\{([^|}]+)\|([^}]+)\}/g,'<ruby>$1<rt>$2</rt></ruby>')
+    .replace(/\*([^*]+)\*/g,'<span class="em">$1</span>')
+    .replace(/#([^#]+)#/g,'<span class="hl">$1</span>');
+}
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem('tour_'+k); return v===null?d:v; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem('tour_'+k,v); }catch(e){} }
+};
+
+const side = document.getElementById('side'), main = document.getElementById('main');
+let cur = Math.min(+store.get('cur',0) || 0, FLAT.length-1);
+
+let openG; try{ openG = JSON.parse(store.get('openG','null')); }catch(e){ openG = null; }
+side.innerHTML = GROUPS.map((g,gi) =>
+  '<div class="gbox'+(openG && !openG.includes(gi) ? ' closed':'')+'" data-g="'+gi+'">' +
+  '<div class="grp"><span>'+g.name+'</span><span class="cnt">'+g.cards.length+'</span><span class="arr">▼</span></div>' +
+  '<div class="list">' + g.cards.map(c => '<div class="item" data-id="'+c.id+'" title="'+c.t+'"><b>'+c.id+'</b><span>'+c.t+'</span></div>').join('') + '</div></div>'
+).join('');
+function saveOpen(){
+  const o=[]; side.querySelectorAll('.gbox').forEach(b=>{ if(!b.classList.contains('closed')) o.push(+b.dataset.g); });
+  store.set('openG', JSON.stringify(o));
+}
+
+function show(i){
+  cur = Math.max(0, Math.min(FLAT.length-1, i));
+  const c = FLAT[cur];
+  main.innerHTML =
+    '<div class="card">' +
+      '<div class="head"><span class="no">'+c.id+'</span><span class="title">'+c.t+'</span><span class="zone">'+c.zone+'</span></div>' +
+      '<div class="sec"><span class="lang">한국어</span><div class="ko">'+c.ko.map(p=>'<p>'+fmt(p)+'</p>').join('')+'</div></div>' +
+      '<div class="sec"><span class="lang zhf">中文</span><div class="zh zhf">'+c.zh.map(p=>'<p>'+fmt(p)+'</p>').join('')+'</div></div>' +
+    '</div>';
+  main.scrollTop = 0;
+  document.querySelectorAll('.item').forEach(el => el.classList.toggle('on', el.dataset.id === c.id));
+  const on = side.querySelector('.item.on');
+  if (on) { const gb=on.closest('.gbox'); if (gb.classList.contains('closed')) { gb.classList.remove('closed'); saveOpen(); } on.scrollIntoView({block:'nearest'}); }
+  document.getElementById('pos').textContent = (cur+1)+' / '+FLAT.length;
+  store.set('cur', cur);
+}
+
+/* ---------- 이벤트 ---------- */
+const mobile = () => window.innerWidth <= 760;
+function setHide(h){ document.body.classList.toggle('hide', h); store.set('hide', h?1:0); }
+setHide(mobile() ? true : store.get('hide','0')==='1');
+
+document.getElementById('menuBtn').onclick = () => setHide(!document.body.classList.contains('hide'));
+document.getElementById('dim').onclick = () => setHide(true);
+side.onclick = e => {
+  const gh = e.target.closest('.grp');
+  if (gh) { gh.parentNode.classList.toggle('closed'); saveOpen(); return; }
+  const it = e.target.closest('.item'); if (!it) return;
+  show(FLAT.findIndex(c => c.id === it.dataset.id));
+  if (mobile()) setHide(true);
+};
+document.getElementById('prev').onclick = () => show(cur-1);
+document.getElementById('next').onclick = () => show(cur+1);
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight') show(cur+1);
+  if (e.key==='ArrowLeft') show(cur-1);
+});
+
+/* 좌우 스와이프로 카드 이동 */
+let sx=0, sy=0;
+main.addEventListener('touchstart', e => { sx=e.touches[0].clientX; sy=e.touches[0].clientY; }, {passive:true});
+main.addEventListener('touchend', e => {
+  const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+  if (Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5) show(cur + (dx<0?1:-1));
+}, {passive:true});
+
+/* 글자 크기 */
+let scale = +store.get('scale',1) || 1;
+function setScale(s){ scale=Math.max(.75,Math.min(1.4,Math.round(s*100)/100)); document.documentElement.style.setProperty('--s',scale); store.set('scale',scale); }
+setScale(scale);
+document.getElementById('fsUp').onclick = () => setScale(scale+.05);
+document.getElementById('fsDown').onclick = () => setScale(scale-.05);
+
+show(cur);
+</script>
+</body>
+</html>
