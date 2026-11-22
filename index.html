@@ -129,6 +129,13 @@ body.rail-hide .rail{overflow:hidden;padding:0;border:0}
 .lt-r .c{font-size:calc(20px*var(--s));font-weight:700;line-height:1.95;background:#fcfbf9}
 .clk{display:inline-block;font-size:11.6px;font-weight:700;color:#b5651d;background:var(--tOrg);border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px}
 
+/* ---------- 음성 버튼 ---------- */
+.spk{display:inline-flex;align-items:center;gap:4px;font-size:12.1px;font-weight:700;border:1px solid var(--ln);background:#fff;border-radius:12px;padding:2px 10px;color:var(--dim);margin-left:6px;vertical-align:1px;line-height:1.5;font-family:"Pretendard",sans-serif;transition:.12s}
+.spk:hover{border-color:var(--accent);color:var(--accent)}
+.spk.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.spk.mini{padding:0 7px;font-size:12.1px;margin-left:6px;vertical-align:2px}
+.lt-h .spk{margin-left:8px;padding:0 8px}
+
 /* ---------- 강조 ---------- */
 .hl{color:var(--accentInk)}
 .em{background:linear-gradient(transparent 60%,var(--tYel) 60%)}
@@ -376,8 +383,8 @@ function renderTour(f){
   return '<div class="pg">' +
     '<div class="pg-h"><span class="no">'+c.id+'</span><h2>'+c.t+'</h2><span class="zone">'+f.sec.name+'</span></div>' +
     '<div class="tc">' +
-      '<div class="tc-b"><span class="tag ko">한국어</span><div class="tx">'+c.ko.map(p=>'<p>'+fmt(p)+'</p>').join('')+'</div></div>' +
-      '<div class="tc-b cn"><span class="tag cn zh">中文</span><div class="tx zh">'+c.zh.map(p=>'<p>'+fmt(p)+'</p>').join('')+'</div></div>' +
+      '<div class="tc-b"><span class="tag ko">한국어</span><button class="spk" data-l="ko">🔊 듣기</button><div class="tx">'+c.ko.map(p=>'<p>'+fmt(p)+'</p>').join('')+'</div></div>' +
+      '<div class="tc-b cn"><span class="tag cn zh">中文</span><button class="spk" data-l="zh">🔊 听</button><div class="tx zh">'+c.zh.map(p=>'<p>'+fmt(p)+'</p>').join('')+'</div></div>' +
     '</div></div>';
 }
 function renderLec(f){
@@ -392,8 +399,8 @@ function renderLec(f){
       '</div>' +
     '</div>' +
     '<div class="lt">' +
-      '<div class="lt-h"><div>#</div><div>한국어 (발표)</div><div class="zh">中文 (通译)</div></div>' +
-      l.rows.map((r,i) => '<div class="lt-r"><div class="i">'+(i+1)+'</div><div class="k">'+fmt(r[0])+'</div><div class="c zh">'+fmt(r[1])+'</div></div>').join('') +
+      '<div class="lt-h"><div>#</div><div>한국어 (발표)<button class="spk" data-l="ko" data-all="1">🔊 전체</button></div><div class="zh">中文 (通译)<button class="spk" data-l="zh" data-all="1">🔊 全部</button></div></div>' +
+      l.rows.map((r,i) => '<div class="lt-r"><div class="i">'+(i+1)+'</div><div class="k"><span class="sx">'+fmt(r[0])+'</span><button class="spk mini" data-l="ko">🔊</button></div><div class="c zh"><span class="sx">'+fmt(r[1])+'</span><button class="spk mini" data-l="zh">🔊</button></div></div>').join('') +
     '</div></div>';
 }
 function renderHome(){
@@ -409,6 +416,7 @@ function renderHome(){
 
 let first = true;
 function show(i, fromMenu){
+  stopSpeak();
   if (i < 0) { cur = -1; main.innerHTML = renderHome(); setCrumb(); markMenu(); store.set('cur',-1); main.scrollTop=0; return; }
   cur = Math.max(0, Math.min(FLAT.length-1, i));
   const f = FLAT[cur];
@@ -464,6 +472,54 @@ function setScale(s){ scale=Math.max(.75,Math.min(1.4,Math.round(s*100)/100)); d
 setScale(scale);
 $('fsUp').onclick = () => setScale(scale+.05);
 $('fsDown').onclick = () => setScale(scale-.05);
+
+/* ---------- 음성 읽기 (브라우저 내장 TTS) ---------- */
+const TTS = window.speechSynthesis;
+let voices = [], spkBtn = null;
+function loadVoices(){ try{ voices = TTS ? TTS.getVoices() : []; }catch(e){ voices = []; } }
+if (TTS){ loadVoices(); TTS.onvoiceschanged = loadVoices; }
+function pickVoice(l){
+  const want = l==='ko' ? ['ko-kr','ko'] : ['zh-cn','zh-hans','cmn','zh'];
+  for (const w of want){ const v = voices.find(v => v.lang && v.lang.replace('_','-').toLowerCase().startsWith(w)); if (v) return v; }
+  return null;
+}
+function plainText(el){
+  const c = el.cloneNode(true);
+  c.querySelectorAll('.pt,.clk,.spk').forEach(x => x.remove());
+  return c.textContent.replace(/\s+/g,' ').trim();
+}
+function chunks(t){ /* 긴 문장 끊김 방지: 문장 단위로 나눠 순서대로 읽기 */
+  return t.split(/(?<=[。！？])|(?<=[.?!])\s+/).map(x => (x||'').trim()).filter(Boolean);
+}
+function stopSpeak(){
+  if (TTS) TTS.cancel();
+  if (spkBtn){ spkBtn.classList.remove('on'); spkBtn = null; }
+}
+function speak(text, l, btn){
+  if (!TTS){ alert('이 브라우저는 음성 읽기를 지원하지 않습니다. Chrome에서 열어주세요.'); return; }
+  const same = spkBtn === btn;
+  stopSpeak();
+  if (same) return;                       /* 같은 버튼 다시 누르면 정지 */
+  spkBtn = btn; btn.classList.add('on');
+  const parts = chunks(text), v = pickVoice(l);
+  parts.forEach((p,i) => {
+    const u = new SpeechSynthesisUtterance(p);
+    u.lang = l==='ko' ? 'ko-KR' : 'zh-CN';
+    if (v) u.voice = v;
+    u.rate = l==='ko' ? 1.0 : 0.9;
+    if (i === parts.length-1) u.onend = () => { if (spkBtn === btn){ btn.classList.remove('on'); spkBtn = null; } };
+    TTS.speak(u);
+  });
+}
+main.addEventListener('click', e => {
+  const b = e.target.closest('.spk'); if (!b) return;
+  const l = b.dataset.l;
+  let text;
+  if (b.dataset.all) text = [...main.querySelectorAll(l==='ko' ? '.lt-r .k .sx' : '.lt-r .c .sx')].map(plainText).join(' ');
+  else if (b.closest('.tc-b')) text = plainText(b.closest('.tc-b').querySelector('.tx'));
+  else text = plainText(b.parentNode.querySelector('.sx'));
+  speak(text, l, b);
+});
 
 /* ---------- 주차 달력 (ISO 주차, 월요일 시작) ---------- */
 function isoWeek(d){
